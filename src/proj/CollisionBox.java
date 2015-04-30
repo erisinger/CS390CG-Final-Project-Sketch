@@ -14,6 +14,7 @@ import proj.Hierarchical.objModel;
 	float velocity;
 	
 	private boolean isPit = false;
+	private boolean falling = false;
 	
 	public  CollisionBox(objModel box){
 		model = box;	
@@ -28,14 +29,33 @@ import proj.Hierarchical.objModel;
 	}
 	
 	public boolean collidesWith(CollisionBox c){
-		
 		//2D AABB equations
-		if (Math.abs(this.x - c.x) < this.r + c.r){
-			if (Math.abs(this.y - c.y) < this.r + c.r){
+		if (collidesVertically(c) || collidesHorizontally(c)){
 				return true;
 			}
+		return false;
+	}
+	
+	public boolean collidesVertically(CollisionBox c){
+		if (collidesHorizontally(c) && Math.abs(this.y - c.y) < this.r + c.r){
+			return true;
 		}
 		return false;
+	}
+	
+	public boolean collidesHorizontally(CollisionBox c){
+		if (Math.abs(this.x - c.x) < this.r + c.r){
+			return true;
+		}
+		return false;		
+	}
+	
+	public boolean isFalling(){
+		return falling;
+	}
+	
+	public void setFalling(boolean f){
+		falling = f;
 	}
 	
 	public boolean isPit(){
