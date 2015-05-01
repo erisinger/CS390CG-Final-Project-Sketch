@@ -15,6 +15,7 @@ import proj.Hierarchical.objModel;
 	
 	private boolean isPit = false;
 	private boolean falling = false;
+	public boolean isGoal = false;
 	
 	public  CollisionBox(objModel box){
 		model = box;	
@@ -30,20 +31,28 @@ import proj.Hierarchical.objModel;
 	
 	public boolean collidesWith(CollisionBox c){
 		//2D AABB equations
-		if (collidesVertically(c) || collidesHorizontally(c)){
+		if (overlapsVertically(c) && overlapsHorizontally(c)){
 				return true;
 			}
 		return false;
 	}
 	
 	public boolean collidesVertically(CollisionBox c){
-		if (collidesHorizontally(c) && Math.abs(this.y - c.y) < this.r + c.r){
+		return Math.abs(this.y - c.y) > Math.abs(this.x - c.x) + 0.05f && c.y > this.y;
+	}
+	
+	public boolean collidesFromLeft(CollisionBox c){
+		return this.x > c.x;
+	}
+	
+	public boolean overlapsVertically(CollisionBox c){
+		if (Math.abs(this.y - c.y) < this.r + c.r){
 			return true;
 		}
 		return false;
 	}
 	
-	public boolean collidesHorizontally(CollisionBox c){
+	public boolean overlapsHorizontally(CollisionBox c){
 		if (Math.abs(this.x - c.x) < this.r + c.r){
 			return true;
 		}

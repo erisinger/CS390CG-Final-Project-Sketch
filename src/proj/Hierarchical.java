@@ -486,9 +486,9 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 //			CollisionBox b = platform.get(i - 1);
 //			platform.add(new CollisionBox(b.x + b.r + 0.5f, -1f , b.z, 0.5f, example_model));	
 //		}
-//		
-//		
-//		
+		
+		
+		
 		//turn a few blocks into pits -- remove from final implementation
 //		platform.get(3).makePit(true);
 		platform.get(7).makePit(true);
@@ -598,14 +598,32 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 		
 		//collision checking
 		for (CollisionBox c : platform){
-			if (!c.isPit() && c.collidesVertically(playerToken)){
-				System.out.println("collision");
-				playerToken.y = 0;
-				playerToken.velocity = 0;
-				playerToken.setFalling(false);
-			}
-			if (c.collidesHorizontally(playerToken)){
-				//move left or right?
+			if (!c.isPit() && c.collidesWith(playerToken)){
+				
+				//collision vertical or horizontal?
+				if (c.collidesVertically(playerToken)){
+					//vertical reset
+					playerToken.y = 0;
+					playerToken.velocity = 0;
+					playerToken.setFalling(false);
+					
+//					System.out.println("vertical collision");
+				}
+//				System.out.println("collision");
+				else{
+					//horizontal reset
+//					playerToken.velocity = 0;
+					if (c.collidesFromLeft(playerToken)){
+						playerToken.x = c.x - (c.r + playerToken.r);
+					}
+					else{
+						playerToken.x = c.x + c.r + playerToken.r;
+					}
+					
+//					System.out.println("horizontal collision");
+				}
+				
+				
 			}
 		}		
 		
