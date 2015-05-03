@@ -241,6 +241,10 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 		case KeyEvent.VK_SPACE:
 			jump();
 			break;
+		case 'd':
+		case 'D':
+			drawBounds = !drawBounds;
+			break;
 		default:
 			break;
 		
@@ -279,8 +283,9 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 	
 	/* === YOUR WORK HERE === */
 	/* Define more models you need for constructing your scene */
-	private objModel example_model = new objModel("./a3_objmodels/bunny.obj");
+	private objModel example_model = new objModel("./a3_objmodels/dragon.obj");
 	private objModel cube_model = new objModel("./a3_objmodels/cube.obj");
+	private objModel background_model = new objModel("./a3_objmodels/Sphere.obj");
 	public CollisionBox playerToken = new CollisionBox(xpos, ypos, 0, 0.5f, example_model);
 	
 	private float example_rotateT = 0.f;
@@ -293,14 +298,17 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 	private float xmax = 1f, ymax = 1f, zmax = 1f;	
 	
 	private float translateAmt = 0.12f;
+	private boolean ignoreInputs = false;
+	private boolean drawBounds = false;
+	
 	private void translateRight(){
-		if (movingRight){
+		if (movingRight && !ignoreInputs){
 			playerToken.x += translateAmt;
 		}
 	}
 	
 	private void translateLeft(){
-		if (movingLeft){
+		if (movingLeft && !ignoreInputs){
 			playerToken.x -= translateAmt;
 		}
 	}
@@ -339,9 +347,12 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 		 * It rotates the bunny with example_rotateT degrees around the bunny's gravity center  
 		 */
 		
-//		if (playerToken.y < -1.f){
-//			new Hierarchical();
-//		}
+		if (playerToken.y < -5.f){
+			playerToken.velocity = 0;
+			movingLeft = false;
+			movingRight = false;
+			initViewParameters();
+		}
 		
 		//capture elapsed time since last draw, reset time stamp
 		float currentTime = System.currentTimeMillis();
@@ -510,7 +521,10 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 		platform.get(81).makePit(true);
 		platform.get(83).makePit(true);
 		platform.get(85).makePit(true);
-		platform.get(92).makePit(true);		
+		platform.get(92).makePit(true);	
+		
+		platform.get(platform.size() - 1).isGoal = true;
+//		platform.get(3).isGoal = true;
 		
 //		//turn a few blocks into pits -- remove from final implementation
 //		platform.get(3).makePit(true);
@@ -528,9 +542,12 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 		
 		gl.glScalef(planetScale, planetScale, planetScale);
 		gl.glTranslatef((-playerToken.x / 20.f) /*+ (platform.get(platform.size() - 1).x / 2.f)*/, 0, -5);
+		
 		gl.glRotatef(example_rotateT, 0, 1.f, 0);
 		
-		example_model.Draw();
+		background_model.Draw();
+		
+//		gl.glTranslatef(platform.get(platform.size() - 1).x / 2.f, 0, 0);
 		
 		//satellites
 		float satelliteScale = 0.3f;
@@ -538,14 +555,14 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 		gl.glScalef(satelliteScale, satelliteScale, satelliteScale);
 		gl.glTranslatef(5.f, 0, 0);
 		gl.glRotatef(example_rotateT / 4.f, 0, 1.f, 0);
-		example_model.Draw();
+		background_model.Draw();
 		gl.glPopMatrix();
 		
 		gl.glPushMatrix();
 		gl.glScalef(satelliteScale, satelliteScale, satelliteScale);
 		gl.glTranslatef(-5.f, 0, 0);
 		gl.glRotatef(example_rotateT / 4.f, 0, 1.f, 0);
-		example_model.Draw();
+		background_model.Draw();
 		gl.glPopMatrix();
 		
 		
@@ -572,7 +589,13 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 		
 		/* draw player token */
 		gl.glPushMatrix();
-		playerToken.draw3DCollisionBounds(gl);
+		if (drawBounds){
+			playerToken.draw3DCollisionBounds(gl);
+		}
+		
+		if (!playerToken.isFalling()){
+			gl.glTranslated(0, 0.1 * Math.sin(example_rotateT * 0.3), 0);
+		}
 		gl.glTranslatef(playerToken.x, playerToken.y, 0);
 		playerToken.model.Draw();
 		gl.glPopMatrix();
@@ -586,7 +609,9 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 			
 //			gl.glScalef(1.5f, 1.5f, 1.5f);
 			
-			c.draw3DCollisionBounds(gl);
+			if (drawBounds){
+				c.draw3DCollisionBounds(gl);
+			}
 			gl.glTranslatef(c.x, c.y, c.z);
 			
 			if (!c.isPit()) c.model.Draw();
@@ -607,12 +632,21 @@ class Hierarchical extends JFrame implements GLEventListener, KeyListener, Mouse
 					playerToken.velocity = 0;
 					playerToken.setFalling(false);
 					
+					if (c.isGoal && playerToken.x >= c.x){
+						ignoreInputs = true;
+						playerToken.x = c.x;
+						movingRight = false;
+						movingLeft = false;
+						jump();
+					}
+					
 //					System.out.println("vertical collision");
 				}
 //				System.out.println("collision");
 				else{
 					//horizontal reset
 //					playerToken.velocity = 0;
+					playerToken.setFalling(true);
 					if (c.collidesFromLeft(playerToken)){
 						playerToken.x = c.x - (c.r + playerToken.r);
 					}
